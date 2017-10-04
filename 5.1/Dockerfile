@@ -5,15 +5,6 @@ RUN groupadd -r mysql && useradd -r -g mysql mysql
 
 RUN apt-get update && apt-get install -y ca-certificates wget binutils locales --no-install-recommends
 
-RUN locale-gen en_US.UTF-8 &&\
-    update-locale
-
-ENV LANG en_US.UTF-8
-
-ENV LANGUAGE en_US:en
-
-ENV LC_ALL en_US.UTF-8
-
 RUN mkdir /docker-entrypoint-initdb.d
 
 # FATAL ERROR: please install the following Perl modules before executing /usr/local/mysql/scripts/mysql_install_db:
@@ -34,7 +25,6 @@ RUN rm -rf /var/lib/apt/lists/* \
 	&& wget "https://cdn.mysql.com/Downloads/MySQL-$MYSQL_MAJOR/mysql-$MYSQL_VERSION-linux-x86_64-glibc23.tar.gz.asc" -O mysql.tar.gz.asc \
 	&& apt-get purge -y --auto-remove ca-certificates wget \
 	&& export GNUPGHOME="$(mktemp -d)" \
-# gpg: key 5072E1F5: public key "MySQL Release Engineering <mysql-build@oss.oracle.com>" imported
 	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys A4A9406876FCBD3C456770C88C718D3B5072E1F5 \
 	&& gpg --batch --verify mysql.tar.gz.asc mysql.tar.gz \
 	&& rm -r "$GNUPGHOME" mysql.tar.gz.asc \
@@ -47,6 +37,7 @@ RUN rm -rf /var/lib/apt/lists/* \
 	&& apt-get update && apt-get install -y binutils && rm -rf /var/lib/apt/lists/* \
 	&& { find /usr/local/mysql -type f -executable -exec strip --strip-all '{}' + || true; } \
 	&& apt-get purge -y --auto-remove binutils
+
 ENV PATH $PATH:/usr/local/mysql/bin:/usr/local/mysql/scripts
 
 # replicate some of the way the APT package configuration works
@@ -62,16 +53,15 @@ RUN mkdir -p /etc/mysql/conf.d \
 
 RUN mkdir -p /var/lib/mysql /var/run/mysqld \
 	&& chown -R mysql:mysql /var/lib/mysql /var/run/mysqld \
-# ensure that /var/run/mysqld (used for socket and lock files) is writable regardless of the UID our mysqld instance ends up having at runtime
 	&& chmod 777 /var/run/mysqld
 
 WORKDIR /usr/local/mysql
-	
+
 VOLUME /var/lib/mysql
 
-COPY docker-entrypoint.sh /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s usr/local/bin/docker-entrypoint.sh /entrypoint.sh # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 3306
 CMD ["mysqld", "--datadir=/var/lib/mysql", "--user=mysql"]
