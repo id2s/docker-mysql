@@ -1,6 +1,6 @@
 # docker-mysql [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](LICENSE) [![Docker Automated buil](https://img.shields.io/docker/automated/jrottenberg/ffmpeg.svg)](https://hub.docker.com/u/id2s/docker-mysql/)
 
-Docker image for MySQL 5.1.73 database based on official [MySQL](https://hub.docker.com/_/mysql/) image
+Docker image for MySQL (5.1) database based on official [MySQL](https://hub.docker.com/_/mysql/) image
 
 ## Installation
 
